@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from environs import Env
 from datetime import datetime as dt, timedelta
 from foobar import FoobarDB
@@ -11,6 +12,9 @@ TOKEN = env.str("TOKEN")
 maxChat = int(env.str("ADMIN"))
 z_chat = int(env.str("Z_CHAT"))
 bodryak = env.str("BODROESLOVO")
+account_id = env.str("ACCOUNT_ID")
+secret_key = env.str("SECRET_KEY")
+
 adminchat_id = []
 
 cht = env.str("ADMINCHAT").split(',')
@@ -20,7 +24,7 @@ for i in cht:
 def spreadidfromssylka(ssylka:str):
     sdf = ssylka.split('/')
     return sdf[5]
-def name(message):
+def name_of_user(message):
     name = 'No name'
     try:
         return message.from_user.first_name

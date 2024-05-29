@@ -11,9 +11,8 @@ from datetime import timedelta
 import os, re, html
 import aioschedule
 from config import *
-import finite_state_machine
-import pyProj
-from finite_state_machine import form_router, sd
+from finite_state_machine import *
+from for_admins import admin_router
 # новшество от Груши
 from aiogram import F, html as HTML
 from aiogram import Bot, Dispatcher, Router, types
@@ -25,11 +24,12 @@ from aiogram.types import Message
 from aiogram.utils.token import TokenValidationError, validate_token
 import asyncio
 import logging
+from database import *
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types import CallbackQuery
 #свои импорты
-
+# yfghbvfvgfgdfg;ldfg;lkdf;lgkd;lfg
 
 
 import sys
@@ -41,8 +41,10 @@ env.read_env()
 TOKEN = env.str('TOKEN')
 # All handlers should be attached to the Router (or Dispatcher)
 router = Router()
-
-
+# Инициализация базы данных
+init_db()
+#add_test_lessons()
+#add_test_tarif()
 #reg_callback = cd.CallbackData("key","Object","ExecuteCommand")
 class Optioncallback(CallbackData, prefix="ob"):
     attr: str
@@ -68,20 +70,26 @@ async def command_start_handler(message: Message) -> None:
     user_id = message.from_user.id
     referrer = None
     referrer_candidate = ""
-    if " " in message.text:
-        referrer_candidate = message.text.split()[1]
-    if sd.authori(message.chat.id):
-        await message.answer(f"Приветствую, <b>{message.from_user.full_name}!</b>\n"
-                         f"Ваш помощник готов приступить к работе.",
-                        reply_markup=finite_state_machine.cmd_menu(finite_state_machine.cmd_keybd('menu', big=True) + finite_state_machine.cmd_keybd('cansel', big=True))
+    user_id = message.from_user.id
+    username = message.from_user.username
+    if get_user(user_id):
+        text = 'мы рады что вы вернулись.'
+    else:
+        add_user(user_id, username)
+        text = ''
+
+    await message.answer(f"Приветствую, <b>{message.from_user.full_name}!</b>\n"
+                         f"{text} Вы готовы приступить к работе?",
+                        reply_markup=keybrd_na4alo(message.message_id)
+                        #finite_state_machine.cmd_menu(finite_state_machine.cmd_keybd('menu_dop', big=True) ),
+                        #reply_markup=keybrd_sub4ik(spisok, 'контрагентов', 1, 1, message.message_id))
                          #f"id = {user_id}\n"
                          )
-    else:
-        await message.answer(
-            f"<b>Вы не зарегистрированы.</b>\n\n"
-            f"URL: {HTML.quote('https://t.me/Maxnagus')}\n",
-            parse_mode='HTML',
-            reply_markup=finite_state_machine.keyboard_contact())
+    #await message.answer(
+    #        f"<b>Вы не зарегистрированы.</b>\n\n"
+    #        f"URL: {HTML.quote('https://t.me/Maxnagus')}\n",
+    #        parse_mode='HTML',
+    #        reply_markup=finite_state_machine.keyboard_contact())
 
 
 @router.callback_query(F.data == "da")
@@ -92,10 +100,10 @@ async def checkin_confirm(callback: CallbackQuery):
     )
 
 @router.message(Command(commands=["send"]))
-@router.message(F.text == "акция мафия")
+@router.message(F.text == "мафия")
 async def echo_handler(message: types.Message, bot: Bot) -> None:
     await bot.send_message(message.chat.id,
-    f'<a href="https://t.me/buuzabot?start={str(message.from_user.id)}">MyasnoyKorol</a>')
+    f'<a href="https://t.me/buut?start={str(message.from_user.id)}">Mya</a>')
 
 def get_checkin_kb() -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(inline_keyboard=InlineKeyboardButton(
@@ -109,7 +117,7 @@ async def scheduler():
         await aioschedule.run_pending()
         await asyncio.sleep(10)
 async def on_startup(dp: Dispatcher, bot: Bot):
-    finite_state_machine.get_podrazd()
+
     asyncio.create_task(scheduler())
     try:
         await bot.send_message(maxChat, 'перезапуск бота ' + str(time.strftime("%H:%M", time.localtime())) )
@@ -122,12 +130,16 @@ async def main() -> None:
     # Dispatcher is a root router
     dp = Dispatcher()
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
-    bot = Bot(TOKEN, parse_mode="HTML")
+    bot = Bot(TOKEN)
+    # включить по дефолту защиту от копирования
+    bot.default.protect_content = True
+    bot.default.parse_mode = "HTML"
+    # добавить роутеры
+    dp.include_router(admin_router)
     dp.include_router(router)
-    dp.include_router(finite_state_machine.form_router)
+    dp.include_router(form_router)
     # And the run events dispatching
     await dp.start_polling(bot)
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     loop = asyncio.get_event_loop()
