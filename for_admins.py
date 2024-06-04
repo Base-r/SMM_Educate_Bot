@@ -16,6 +16,9 @@ class Addlesson(StatesGroup):
     v2index = State()
     v3images = State()
     v4text = State()
+class AddTariff(StatesGroup):
+    update = State()
+
 
 @admin_router.message(Command(commands=["admin"]))
 @admin_router.message(F.text.contains('🥹'))
@@ -32,7 +35,7 @@ async def cmd_test1(message: Message):
     if message.from_user.id in adminchat_id or message.chat.id in adminchat_id:
         add_admin(user_id, username)
 
-@admin_router.message(Command(commands=["rename"]))
+@admin_router.message(Command(commands=["renameLesson"]))
 @admin_router.message(F.text.contains("😃"))
 async def add_less(message: Message, state: FSMContext) -> None:
     if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
@@ -53,6 +56,39 @@ async def add_etap(message: Message, state: FSMContext) -> None:
     update_lesson(int(data['id']),"Урок " + data['id'], message.text)
     await message.answer(
         "переименовано")
+    await state.clear()
+
+@admin_router.message(Command(commands=["update_tariff"]))
+@admin_router.message(F.text.contains("🤓"))
+async def add_tariff(message: Message, state: FSMContext) -> None:
+    if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
+        await message.answer(
+            "Выберите номер тарифа, который хотите изменить:", reply_markup=keybrd_tarif(message.message_id,'update'))
+#        await state.update_data(podr="")
+
+
+
+@admin_router.callback_query(Tariff.filter(F.status == "update"))
+async def tariff_rename(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
+    print('rename', callback_data.status)
+    await call.message.edit_text(text=f'Тариф {callback_data.id_} вводите новое название')
+    await state.set_state(AddTariff.update)
+    await state.update_data(id=callback_data.id_)
+    await state.update_data(msgid=call.message.message_id)
+@admin_router.message(AddTariff.update)
+async def tariff_rename(message: Message, state: FSMContext) -> None:
+    data = await state.get_data()
+    upadate_tariff(int(data['id']), data['id'], message.text)
+    await message.answer(
+        "Название тарифа переименовано. Введите новую цену:")
+    await state.set_state(AddTariff.update)
+
+@admin_router.message(AddTariff.update)
+async def add_price(message: Message, state: FSMContext) -> None:
+    data = await state.get_data()
+    upadate_tariff(int(data['id']), data['id'], message.text)
+    await message.answer(
+        "Название и цена тарифа успешно обновлены!")
     await state.clear()
 
 @admin_router.message(Command(commands=["adde"]))

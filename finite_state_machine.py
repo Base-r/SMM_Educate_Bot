@@ -64,7 +64,7 @@ class Reg_callback(CallbackData, prefix="lk"):
     status: str
     msgid : int
 
-class Tarif(CallbackData, prefix="tarif"):
+class Tariff(CallbackData, prefix="tarif"):
     id_: str
     status: str
     msgid : int
@@ -96,7 +96,7 @@ def keybrd_tarif(msgid, status):
     for item in tarif:
         markup.row(InlineKeyboardButton(text=item.name,
                                     callback_data=
-                                    Tarif(
+                                    Tariff(
                                         id_=str(item.id),
                                         status=status,
                                         msgid=str(msgid)
@@ -166,8 +166,8 @@ async def vibor1(call: CallbackQuery, callback_data: Na4alo,state: FSMContext):
                                  # chat_id=call.from_user.id,
                                  # message_id=call.message.message_id
                                  )
-@form_router.callback_query(Tarif.filter(F.status == "gettar"))#, Dokum.EGname)
-async def vibor2(call: CallbackQuery, callback_data: Tarif,state: FSMContext):
+@form_router.callback_query(Tariff.filter(F.status == "gettar"))#, Dokum.EGname)
+async def vibor2(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
     #await call.answer()
     key = False
     if callback_data.id_ == "1":

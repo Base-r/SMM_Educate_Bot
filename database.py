@@ -57,10 +57,11 @@ def init_db():
     Base.metadata.create_all(engine)
 
 # Функция для добавления тестовых тарифов
-def add_test_tarif():
+def add_test_tarif(name, price):
     add_tariff(name="SMM-Мастер", price=499)
     add_tariff(name="SMM-Старт", price=2000)
     add_tariff(name="SMM-Профи", price=3500)
+
 
 def add_user(uuid, username):
     session = Session()
@@ -221,5 +222,15 @@ def update_lesson(lesson_id, new_title, new_subtitle):
     if lesson:
         lesson.title = new_title
         lesson.subtitle = new_subtitle
+        session.commit()
+    session.close()
+
+
+def upadate_tariff(tariff_id,new_name, new_price):
+    session = Session()
+    tariff = session.query(Тариф).filter_by(id = tariff_id).first()
+    if tariff:
+        tariff.name = new_name
+        tariff.price = new_price
         session.commit()
     session.close()
