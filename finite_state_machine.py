@@ -80,10 +80,10 @@ def keybrd_na4alo(msgid):
     msgid = str(msgid)
 
         #lesson.subtitle = new_subtitle
-    markup.row(InlineKeyboardButton(text="готов",
+    markup.row(InlineKeyboardButton(text="Готовы продолжить?",
                                     callback_data=
                                     Na4alo(
-                                        status="начало",
+                                        status="Готовы начать?",
                                         msgid=msgid
                                     ).pack()
                                     ), width=1

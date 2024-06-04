@@ -73,13 +73,13 @@ async def command_start_handler(message: Message) -> None:
     user_id = message.from_user.id
     username = message.from_user.username
     if get_user(user_id):
-        text = 'мы рады что вы вернулись.'
+        text = 'Рады снова вас видеть!'
     else:
         add_user(user_id, username)
-        text = ''
+        text = 'Это телеграм бот для обучения по курсу "SMM-Старт: Основы эффективного продвижения в социальных сетях"'
 
-    await message.answer(f"Приветствую, <b>{message.from_user.full_name}!</b>\n"
-                         f"{text} Вы готовы приступить к работе?",
+    await message.answer(f"Здравствуй, <b>{message.from_user.full_name}!</b>\n"
+                         f'{text}',
                         reply_markup=keybrd_na4alo(message.message_id)
                         #finite_state_machine.cmd_menu(finite_state_machine.cmd_keybd('menu_dop', big=True) ),
                         #reply_markup=keybrd_sub4ik(spisok, 'контрагентов', 1, 1, message.message_id))
