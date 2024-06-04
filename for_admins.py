@@ -5,8 +5,10 @@ from aiogram.filters.chat_member_updated import \
     ChatMemberUpdatedFilter, MEMBER, KICKED, IS_NOT_MEMBER, ADMINISTRATOR
 from aiogram.types import ChatMemberUpdated, ChatMember
 from finite_state_machine import *
+
 admin_router = Router()
 formattime = '%d.%m.%Y %H:%M'
+
 
 class Addlesson(StatesGroup):
     # состояние добавления
@@ -16,8 +18,11 @@ class Addlesson(StatesGroup):
     v2index = State()
     v3images = State()
     v4text = State()
+
+
 class AddTariff(StatesGroup):
-    update = State()
+    rename = State()
+    price = State()
 
 
 @admin_router.message(Command(commands=["admin"]))
@@ -28,75 +33,92 @@ async def cmd_test1(message: Message):
     username = message.from_user.username
     if get_admin(chat_id):
         await message.answer(
-                text=f"Привет! Спасибо, что добавили меня в "
-                     f'{message.chat.type} "{message.chat.title}" '
-                     f"как администратора. ID чата: {message.chat.id}")
+            text=f"Привет! Спасибо, что добавили меня в "
+                 f'{message.chat.type} "{message.chat.title}" '
+                 f"как администратора. ID чата: {message.chat.id}")
         add_admin(user_id, username)
     if message.from_user.id in adminchat_id or message.chat.id in adminchat_id:
         add_admin(user_id, username)
+
 
 @admin_router.message(Command(commands=["renameLesson"]))
 @admin_router.message(F.text.contains("😃"))
 async def add_less(message: Message, state: FSMContext) -> None:
     if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
         await message.answer(
-            "выберите номер урока, который хотите переименовать:", reply_markup=keybrd_lesson(message.message_id,'rename'))
+            "выберите номер урока, который хотите переименовать:",
+            reply_markup=keybrd_lesson(message.message_id, 'rename'))
+
+
 #        await state.update_data(podr="")
 @admin_router.callback_query(Lesson.filter(F.status == "rename"))
-async def less_rename(call: CallbackQuery, callback_data: Lesson,state: FSMContext):
+async def less_rename(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
     print('rename', callback_data.status)
     await call.message.edit_text(text=f'Урок {callback_data.id_} вводите описание')
     await state.set_state(Addlesson.rename)
     await state.update_data(id=callback_data.id_)
     await state.update_data(msgid=call.message.message_id)
 
+
 @admin_router.message(Addlesson.rename)
 async def add_etap(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
-    update_lesson(int(data['id']),"Урок " + data['id'], message.text)
+    update_lesson(int(data['id']), "Урок " + data['id'], message.text)
     await message.answer(
         "переименовано")
     await state.clear()
+
 
 @admin_router.message(Command(commands=["update_tariff"]))
 @admin_router.message(F.text.contains("🤓"))
 async def add_tariff(message: Message, state: FSMContext) -> None:
     if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
         await message.answer(
-            "Выберите номер тарифа, который хотите изменить:", reply_markup=keybrd_tarif(message.message_id,'update'))
+            "Выберите номер тарифа, который хотите изменить:", reply_markup=keybrd_tarif(message.message_id, 'update'))
+
+
 #        await state.update_data(podr="")
 
 
-
-@admin_router.callback_query(Tariff.filter(F.status == "update"))
+@admin_router.callback_query(Tariff.filter(F.status == "rename"))
 async def tariff_rename(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
     print('rename', callback_data.status)
     await call.message.edit_text(text=f'Тариф {callback_data.id_} вводите новое название')
-    await state.set_state(AddTariff.update)
+    await state.set_state(AddTariff.rename)
     await state.update_data(id=callback_data.id_)
     await state.update_data(msgid=call.message.message_id)
-@admin_router.message(AddTariff.update)
-async def tariff_rename(message: Message, state: FSMContext) -> None:
-    data = await state.get_data()
-    upadate_tariff(int(data['id']), data['id'], message.text)
-    await message.answer(
-        "Название тарифа переименовано. Введите новую цену:")
-    await state.set_state(AddTariff.update)
 
-@admin_router.message(AddTariff.update)
-async def add_price(message: Message, state: FSMContext) -> None:
+
+@admin_router.callback_query(Tariff.filter(F.status == "price"))
+async def tariff_new_price(call: CallbackQuery, callback_data: Tariff, state: FSMContext) -> None:
+    print('price', callback_data.status)
+    await call.message.edit_text(text=f'Название тарифа переименовано. Введите новую цену: ')
+    await state.set_state(AddTariff.price)
+    await state.update_data(id=callback_data.id_)
+    await state.update_data(msgid=call.message.message_id)
+    await call.message.answer(
+        "Цена изменёна.")
+    await state.set_state(AddTariff.price)
+
+
+@admin_router.message(AddTariff.price)
+async def update_tariff(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     upadate_tariff(int(data['id']), data['id'], message.text)
     await message.answer(
         "Название и цена тарифа успешно обновлены!")
     await state.clear()
 
+
 @admin_router.message(Command(commands=["adde"]))
 @admin_router.message(F.text.contains("😁"))
 async def add_etap(message: Message, state: FSMContext) -> None:
     if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
         await message.answer(
-            "выберите один из уроков, куда добавляется этап урока:", reply_markup=keybrd_lesson(message.message_id,'addE'))
+            "выберите один из уроков, куда добавляется этап урока:",
+            reply_markup=keybrd_lesson(message.message_id, 'addE'))
+
+
 #        await state.update_data(podr="")
 #        await state.set_state(Addlesson.v1urok)
 @admin_router.callback_query(Lesson.filter(F.status == "addE"))
@@ -105,11 +127,14 @@ async def adde_1(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
     await state.update_data(id=callback_data.id_)
     await state.update_data(msgid=call.message.message_id)
     await call.message.edit_text(text=f'Урок {callback_data.id_} теперь надо указать номер этапа')
+
+
 @admin_router.message(Addlesson.v2index)
 async def photo_handler(message: types.Message, state: FSMContext) -> None:
     await state.update_data(index=message.text)
     await state.set_state(Addlesson.v3images)
     await message.answer(text=f'загружайте фото')
+
 
 @admin_router.message(F.content_type.in_({'photo'}), Addlesson.v3images)  # , 'sticker'
 async def photo_handler(message: types.Message, state: FSMContext) -> None:
@@ -125,6 +150,7 @@ async def photo_handler(message: types.Message, state: FSMContext) -> None:
         await state.set_state(Addlesson.v4text)
         await state.update_data(images=images)
         await message.answer(text=f'загружайте текст')
+
 
 @admin_router.message(Addlesson.v4text)
 async def photo_handler(message: types.Message, state: FSMContext) -> None:
@@ -144,34 +170,39 @@ async def photo_handler(message: types.Message, state: FSMContext) -> None:
 async def delete_less(message: Message, state: FSMContext) -> None:
     if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
         await message.answer(
-            "выберите номер урока, который хотите удалить:", reply_markup=keybrd_lesson(message.message_id,'deletelesson'))
+            "выберите номер урока, который хотите удалить:",
+            reply_markup=keybrd_lesson(message.message_id, 'deletelesson'))
+
+
 @admin_router.callback_query(Lesson.filter(F.status == "deletelesson"))
-async def delete_less1(call: CallbackQuery, callback_data: Lesson,state: FSMContext):
+async def delete_less1(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
     print(callback_data.status)
     delete_lesson(int(callback_data.id_))
     await call.message.edit_text(text=f'Урок {callback_data.id_} удален')
+
 
 @admin_router.my_chat_member(
     ChatMemberUpdatedFilter(member_status_changed=KICKED)
 )
 async def user_blocked_bot(event: ChatMemberUpdated):
-    key=event.from_user.id
-    pole='kick'
-    value=str(dt.today().strftime(formattime))
+    key = event.from_user.id
+    pole = 'kick'
+    value = str(dt.today().strftime(formattime))
+
 
 @admin_router.my_chat_member(
     ChatMemberUpdatedFilter(member_status_changed=MEMBER)
 )
 async def user_unblocked_bot(event: ChatMemberUpdated):
-    key=event.chat.id
-    pole=event.new_chat_member.status
-    value=event.from_user.id
-    #db.update_one(key=event.from_user.id, pole='newmember', value=str(dt.today().strftime(formattime)))
+    key = event.chat.id
+    pole = event.new_chat_member.status
+    value = event.from_user.id
+    # db.update_one(key=event.from_user.id, pole='newmember', value=str(dt.today().strftime(formattime)))
+
+
 @admin_router.chat_member(ChatMember)
 async def user_unblocked_bot(event: ChatMember):
-    key=event.chat.id
-    pole=event.status
-    value=event.user.id
-    #db.update_one(key=event.from_user.id, pole='newmember', value=str(dt.today().strftime(formattime)))
-
-
+    key = event.chat.id
+    pole = event.status
+    value = event.user.id
+    # db.update_one(key=event.from_user.id, pole='newmember', value=str(dt.today().strftime(formattime)))
