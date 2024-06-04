@@ -58,9 +58,9 @@ def init_db():
 
 # Функция для добавления тестовых тарифов
 def add_test_tarif():
-    add_tariff(name="базовый", price=499)
-    add_tariff(name="5 уроков", price=2000)
-    add_tariff(name="дополнительный", price=3500)
+    add_tariff(name="SMM-Мастер", price=499)
+    add_tariff(name="SMM-Старт", price=2000)
+    add_tariff(name="SMM-Профи", price=3500)
 
 def add_user(uuid, username):
     session = Session()

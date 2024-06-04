@@ -60,7 +60,7 @@ async def add_etap(message: Message, state: FSMContext) -> None:
 async def add_etap(message: Message, state: FSMContext) -> None:
     if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
         await message.answer(
-            "выберите один из уроков, куда добавляется этап:", reply_markup=keybrd_lesson(message.message_id,'addE'))
+            "выберите один из уроков, куда добавляется этап урока:", reply_markup=keybrd_lesson(message.message_id,'addE'))
 #        await state.update_data(podr="")
 #        await state.set_state(Addlesson.v1urok)
 @admin_router.callback_query(Lesson.filter(F.status == "addE"))
