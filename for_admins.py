@@ -74,7 +74,7 @@ async def add_etap(message: Message, state: FSMContext) -> None:
 async def add_tariff(message: Message, state: FSMContext) -> None:
     if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
         await message.answer(
-            "Выберите номер тарифа, который хотите изменить:", reply_markup=keybrd_tarif(message.message_id, 'update'))
+            "Выберите номер тарифа, который хотите изменить:", reply_markup=keybrd_tarif(message.message_id, 'rename'))
 
 
 #        await state.update_data(podr="")
@@ -89,24 +89,20 @@ async def tariff_rename(call: CallbackQuery, callback_data: Tariff, state: FSMCo
     await state.update_data(msgid=call.message.message_id)
 
 
-@admin_router.callback_query(Tariff.filter(F.status == "price"))
-async def tariff_new_price(call: CallbackQuery, callback_data: Tariff, state: FSMContext) -> None:
-    print('price', callback_data.status)
-    await call.message.edit_text(text=f'Название тарифа переименовано. Введите новую цену: ')
+@admin_router.message(AddTariff.rename)
+async def tariff_new_price(message: Message, state: FSMContext) -> None:
+    print('price')
+    await message.answer(text=f'Название тарифа переименовано. Введите новую цену: ')
     await state.set_state(AddTariff.price)
-    await state.update_data(id=callback_data.id_)
-    await state.update_data(msgid=call.message.message_id)
-    await call.message.answer(
-        "Цена изменёна.")
-    await state.set_state(AddTariff.price)
-
+    await state.update_data(text=message.text)
+    
 
 @admin_router.message(AddTariff.price)
 async def update_tariff(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
-    upadate_tariff(int(data['id']), data['id'], message.text)
-    await message.answer(
-        "Название и цена тарифа успешно обновлены!")
+    
+    upadate_tariff(int(data['id']), new_name=data['text'], new_price=float(message.text.replace('.',',')))
+    await message.answer("Название и цена тарифа успешно обновлены!")
     await state.clear()
 
 
