@@ -20,7 +20,7 @@ from aiogram.types import (
     KeyboardButton,
     InlineKeyboardButton,
     Message, Chat,
-    ReplyKeyboardMarkup,CallbackQuery,
+    ReplyKeyboardMarkup, CallbackQuery,
     ReplyKeyboardRemove,
     ContentType,
 )
@@ -29,27 +29,29 @@ from itertools import chain
 from time import mktime
 from database import *
 from kassa import *
+
 form_router = Router()
 
 sd = FoobarDB('workers.txt')
 
 knopki = {
-    'menu': {'🧮':'Тарифы',#'📆':'Добавить договор',
-             '✍️':'Оставить отзыв', '💼':'Личный кабинет'},
+    'menu': {'🧮': 'Тарифы',  # '📆':'Добавить договор',
+             '✍️': 'Оставить отзыв', '💼': 'Личный кабинет'},
 
-    'menu_dop': {'🗞':'Новости',
-           '⚙️': 'Настройки', '🧚🏽': 'Помощь'},
-    'menu_vse': {'💼':'Заказ', '🗞': 'Новости',
+    'menu_dop': {'🗞': 'Новости',
+                 '⚙️': 'Настройки', '🧚🏽': 'Помощь'},
+    'menu_vse': {'💼': 'Заказ', '🗞': 'Новости',
                  '⚙️': 'Настройки', '🧚🏽': 'Помощь'},
 
-    'da': {'🙂':'Да','🙃':'Нет','❌':'Отмена'},
-    'next':{'⏭':'Пропустить'},
-    'cansel':{'❌':'Отмена'},
+    'da': {'🙂': 'Да', '🙃': 'Нет', '❌': 'Отмена'},
+    'next': {'⏭': 'Пропустить'},
+    'cansel': {'❌': 'Отмена'},
 
     'settings': {
         'Имя': '', 'Адрес': '',
         'Телефон': '', 'Уведомления': True}
-    }
+}
+
 
 class Smm(StatesGroup):
     # состояние оплата
@@ -58,28 +60,31 @@ class Smm(StatesGroup):
 
 class Na4alo(CallbackData, prefix="go"):
     status: str
-    msgid : int
+    msgid: int
+
 
 class Reg_callback(CallbackData, prefix="lk"):
     status: str
-    msgid : int
+    msgid: int
+
 
 class Tariff(CallbackData, prefix="tarif"):
     id_: str
     status: str
-    msgid : int
+    msgid: int
+
 
 class Lesson(CallbackData, prefix="lesson"):
     id_: str
-    status:str
-    msgid : int
+    status: str
+    msgid: int
 
 
 def keybrd_na4alo(msgid):
     markup = InlineKeyboardBuilder()
     msgid = str(msgid)
 
-        #lesson.subtitle = new_subtitle
+    # lesson.subtitle = new_subtitle
     markup.row(InlineKeyboardButton(text="Готовы продолжить?",
                                     callback_data=
                                     Na4alo(
@@ -89,38 +94,42 @@ def keybrd_na4alo(msgid):
                                     ), width=1
                )
     return markup.as_markup()
+
+
 def keybrd_tarif(msgid, status):
     markup = InlineKeyboardBuilder()
     msgid = str(msgid)
     tarif = get_aLL_tarifs()
     for item in tarif:
         markup.row(InlineKeyboardButton(text=item.name,
-                                    callback_data=
-                                    Tariff(
-                                        id_=str(item.id),
-                                        status=status,
-                                        msgid=str(msgid)
-                                    ).pack()
-                                    ), width=1
-               )
+                                        callback_data=
+                                        Tariff(
+                                            id_=str(item.id),
+                                            status=status,
+                                            msgid=str(msgid)
+                                        ).pack()
+                                        ), width=1
+                   )
     return markup.as_markup()
+
 
 def keybrd_lesson(msgid, status):
     markup = InlineKeyboardBuilder()
     msgid = str(msgid)
     lesson = get_aLL_lesson()
-    #items = Урок()
+    # items = Урок()
     for item in lesson:
         markup.row(InlineKeyboardButton(text=item.title + ': ' + item.subtitle,
-                                    callback_data=
-                                    Lesson(
-                                        id_=str(item.id),
-                                        status=status,
-                                        msgid=str(msgid)
-                                    ).pack()
-                                    ), width=1
-               )
+                                        callback_data=
+                                        Lesson(
+                                            id_=str(item.id),
+                                            status=status,
+                                            msgid=str(msgid)
+                                        ).pack()
+                                        ), width=1
+                   )
     return markup.as_markup()
+
 
 def cmd_keybd(menu_txt, big=False):
     try:
@@ -128,12 +137,11 @@ def cmd_keybd(menu_txt, big=False):
     except:
         menu = menu_txt
 
-
     keyboard = []
     kb_row = []
     for i, value in enumerate(menu.keys()):
         if big:
-            text = value+menu[value]
+            text = value + menu[value]
         else:
             text = value
 
@@ -141,6 +149,7 @@ def cmd_keybd(menu_txt, big=False):
     keyboard.append(kb_row)
 
     return keyboard
+
 
 def cmd_spisok(menu_txt, b=1):
     keyboard = []
@@ -152,23 +161,30 @@ def cmd_spisok(menu_txt, b=1):
         if i & b:
             keyboard.append(kb_row)
     return keyboard
+
+
 def cmd_menu(keyboard):
     return ReplyKeyboardMarkup(
         resize_keyboard=True,
-        #input_field_placeholder="это главное меню",
+        # input_field_placeholder="это главное меню",
         keyboard=keyboard)
 
-@form_router.callback_query(Na4alo.filter(F.status == "начало"))#, Dokum.EGname)
-async def vibor1(call: CallbackQuery, callback_data: Na4alo,state: FSMContext):
-    #await call.answer()
-    await call.message.edit_text(text=f'Выбирайте наши уроки',
-                                 reply_markup=keybrd_tarif(call.message.message_id, "gettar")
-                                 # chat_id=call.from_user.id,
-                                 # message_id=call.message.message_id
-                                 )
-@form_router.callback_query(Tariff.filter(F.status == "gettar"))#, Dokum.EGname)
+
+@form_router.callback_query(Na4alo.filter(F.status == "начало"))  # , Dokum.EGname)
+async def vibor1(call: CallbackQuery, callback_data: Na4alo, state: FSMContext):
+    # await call.answer()
+
+    await call.message.edit_text(
+        text=f'Наш курс дает возможность выбрать тариф, который подойдет именно вам. Мы подготовили для вас [тест](https://madte.st/0xGxs0Cr). Пройдите его, чтобы понять какой тариф, соответствует вашим текущим потребностям и целям в области SMM.',
+        parse_mode='MarkdownV2', reply_markup=keybrd_tarif(call.message.message_id, "gettar")
+        # chat_id=call.from_user.id,
+        # message_id=call.message.message_id
+    )
+
+
+@form_router.callback_query(Tariff.filter(F.status == "gettar"))  # , Dokum.EGname)
 async def vibor2(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
-    #await call.answer()
+    # await call.answer()
     key = False
     if callback_data.id_ == "1":
         text = f'Выберите один из уроков'
@@ -180,15 +196,15 @@ async def vibor2(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
         sum_pay = tarif1.price
         descrip = tarif1.name
         # как тольк активируем апи юкассы
-        #(pay_id, pay_url) = payment_create(sum_pay, descrip)
+        # (pay_id, pay_url) = payment_create(sum_pay, descrip)
         await call.message.answer(text='тут будет оплата, а пока. вернемся в начало',
-                                     reply_markup=keybrd_tarif(call.message.message_id, "gettar")
-                                     # chat_id=call.from_user.id,
-                                     # message_id=call.message.message_id
-                                     )
-        #await call.message.answer(f'Оплата в сумме: {sum_pay} за тариф {descrip}')
-        #check = await check_payment(payment_id=pay_id)
-        #if check:
+                                  reply_markup=keybrd_tarif(call.message.message_id, "gettar")
+                                  # chat_id=call.from_user.id,
+                                  # message_id=call.message.message_id
+                                  )
+        # await call.message.answer(f'Оплата в сумме: {sum_pay} за тариф {descrip}')
+        # check = await check_payment(payment_id=pay_id)
+        # if check:
         #    if callback_data.id_ == "2":
         #        k = 5
         #    if callback_data.id_ == "3":
@@ -197,8 +213,6 @@ async def vibor2(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
         #        add_available_lesson(call.from_user.id, ids)
 
         # тут ссылка на покупку курса
-
-
 
     if not key:
         text = 'Этот урок уже не активен, выбирайте другой'
@@ -209,31 +223,25 @@ async def vibor2(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
                                  # message_id=call.message.message_id
                                  )
 
-@form_router.callback_query(Lesson.filter(F.status == "lesson_buy1"))#, Dokum.EGname)
-async def vibor3(call: CallbackQuery, callback_data: Lesson,state: FSMContext):
+
+@form_router.callback_query(Lesson.filter(F.status == "lesson_buy1"))  # , Dokum.EGname)
+async def vibor3(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
     print('ok', callback_data.status)
     # выбран базовый
     tarif1 = get_tarif(1)
     sum_pay = tarif1.price
     descrip = tarif1.name
     # как тольк активируем апи юкассы
-    #(pay_id, pay_url) = payment_create(sum_pay, descrip)
+    # (pay_id, pay_url) = payment_create(sum_pay, descrip)
     await call.message.edit_text(text='тут будет оплата, а пока. вернемся в начало',
                                  reply_markup=keybrd_tarif(call.message.message_id, "gettar")
                                  # chat_id=call.from_user.id,
                                  # message_id=call.message.message_id
                                  )
     await call.message.answer(f'Оплата в сумме: {sum_pay} за тариф {descrip}')
-    #check = await check_payment(payment_id=pay_id)
-    #if check:
+    # check = await check_payment(payment_id=pay_id)
+    # if check:
     #    add_available_lesson(call.from_user.id, int(callback_data.id_))
-
-
-
-
-
-
-
 
 
 @form_router.message(F.content_type.in_({'text'}))
