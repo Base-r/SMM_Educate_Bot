@@ -175,8 +175,8 @@ async def vibor1(call: CallbackQuery, callback_data: Na4alo, state: FSMContext):
     # await call.answer()
 
     await call.message.edit_text(
-        text=f'Наш курс дает возможность выбрать тариф, который подойдет именно вам. Мы подготовили для вас [тест](https://madte.st/0xGxs0Cr). Пройдите его, чтобы понять какой тариф, соответствует вашим текущим потребностям и целям в области SMM.',
-        parse_mode='MarkdownV2', reply_markup=keybrd_tarif(call.message.message_id, "gettar")
+        text=f'Наш курс дает возможность выбрать тариф, который подойдет именно вам\\. Мы подготовили для вас [тест](https://madte.st/0xGxs0Cr)\\. Пройдите его, чтобы понять какой тариф, соответствует вашим текущим потребностям и целям в области SMM\\.',
+        reply_markup=keybrd_tarif(call.message.message_id, "gettar")
         # chat_id=call.from_user.id,
         # message_id=call.message.message_id
     )
@@ -197,7 +197,7 @@ async def vibor2(call: CallbackQuery, callback_data: Tariff, state: FSMContext):
         descrip = tarif1.name
         # как тольк активируем апи юкассы
         # (pay_id, pay_url) = payment_create(sum_pay, descrip)
-        await call.message.answer(text='тут будет оплата, а пока. вернемся в начало',
+        await call.message.answer(text='тут будет оплата, а пока\\. вернемся в начало',
                                   reply_markup=keybrd_tarif(call.message.message_id, "gettar")
                                   # chat_id=call.from_user.id,
                                   # message_id=call.message.message_id
@@ -233,7 +233,7 @@ async def vibor3(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
     descrip = tarif1.name
     # как тольк активируем апи юкассы
     # (pay_id, pay_url) = payment_create(sum_pay, descrip)
-    await call.message.edit_text(text='тут будет оплата, а пока. вернемся в начало',
+    await call.message.edit_text(text='тут будет оплата, а пока\\. вернемся в начало',
                                  reply_markup=keybrd_tarif(call.message.message_id, "gettar")
                                  # chat_id=call.from_user.id,
                                  # message_id=call.message.message_id
@@ -247,8 +247,8 @@ async def vibor3(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
 @form_router.message(F.content_type.in_({'text'}))
 async def process_anytxt(message: Message, state: FSMContext) -> None:
     if not get_admin(message.chat.id):
-        text = 'мы рады что вы вернулись.'
-        await message.answer(f"Приветствую, <b>{message.from_user.full_name}!</b>\n"
+        text = 'мы рады что вы вернулись\\.'
+        await message.answer(f"Приветствую, {message.from_user.full_name}\\!\n"
                              f"{text} Вы готовы приступить к работе?",
                              reply_markup=keybrd_na4alo(message.message_id)
                              )

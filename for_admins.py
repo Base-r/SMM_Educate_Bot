@@ -33,9 +33,9 @@ async def cmd_test1(message: Message):
     username = message.from_user.username
     if get_admin(chat_id):
         await message.answer(
-            text=f"Привет! Спасибо, что добавили меня в "
+            text=f"Привет\\! Спасибо, что добавили меня в "
                  f'{message.chat.type} "{message.chat.title}" '
-                 f"как администратора. ID чата: {message.chat.id}")
+                 f"как администратора\\. ID чата: {message.chat.id}")
         add_admin(user_id, username)
     if message.from_user.id in adminchat_id or message.chat.id in adminchat_id:
         add_admin(user_id, username)
@@ -92,7 +92,7 @@ async def tariff_rename(call: CallbackQuery, callback_data: Tariff, state: FSMCo
 @admin_router.message(AddTariff.rename)
 async def tariff_new_price(message: Message, state: FSMContext) -> None:
     print('price')
-    await message.answer(text=f'Название тарифа переименовано. Введите новую цену: ')
+    await message.answer(text=f'Название тарифа переименовано\\. Введите новую цену: ')
     await state.set_state(AddTariff.price)
     await state.update_data(text=message.text)
     
@@ -102,7 +102,7 @@ async def update_tariff(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     
     upadate_tariff(int(data['id']), new_name=data['text'], new_price=float(message.text.replace('.',',')))
-    await message.answer("Название и цена тарифа успешно обновлены!")
+    await message.answer("Название и цена тарифа успешно обновлены\\!")
     await state.clear()
 
 
