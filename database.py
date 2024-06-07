@@ -29,7 +29,6 @@ class Урок(Base):
 
 class Этап(Base):
     __tablename__ = 'Этап'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
     урок_id = Column(Integer, ForeignKey('Урок.id'))
     index = Column(Integer, nullable=False)
@@ -141,6 +140,11 @@ def get_aLL_lesson():
 
     return lesson
     session.close()
+def get_all_stage_from_lesson(indexlesson):
+    session = Session()
+    stages = session.query(Этап).filter_by(урок_id=indexlesson)
+    return stages
+    session.close()
 
 def get_aLL_tarifs():
     session = Session()
@@ -185,6 +189,13 @@ def delete_lesson(lesson_id):
     lesson = session.query(Урок).filter_by(id=lesson_id).first()
     if lesson:
         session.delete(lesson)
+        session.commit()
+    session.close()
+def delete_lstage(lesson_id, stage_id):
+    session = Session()
+    stage_ = session.query(Этап).filter_by(урок_id=lesson_id, index=stage_id).first()
+    if stage_:
+        session.delete(stage_)
         session.commit()
     session.close()
 

@@ -25,7 +25,7 @@ from aiogram.utils.token import TokenValidationError, validate_token
 import asyncio
 import logging
 from database import *
-from aiogram.utils.markdown import hbold
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types import CallbackQuery
 #свои импорты
@@ -73,12 +73,12 @@ async def command_start_handler(message: Message) -> None:
     user_id = message.from_user.id
     username = message.from_user.username
     if get_user(user_id):
-        text = 'Рады снова вас видеть\\!'
+        text = 'Рады снова вас видеть!'
     else:
         add_user(user_id, username)
         text = 'Это телеграм бот для обучения по курсу "SMM-Старт: Основы эффективного продвижения в социальных сетях"'
 
-    await message.answer(f"Здравствуй, {message.from_user.full_name}\\!\n"
+    await message.answer(f"Здравствуй, <b>{message.from_user.full_name}!</b>\n"
                          f'{text}',
                         reply_markup=keybrd_na4alo(message.message_id)
                         #finite_state_machine.cmd_menu(finite_state_machine.cmd_keybd('menu_dop', big=True) ),
@@ -130,10 +130,10 @@ async def main() -> None:
     # Dispatcher is a root router
     dp = Dispatcher()
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
-    bot = Bot(TOKEN, parse_mode="Markdown")
+    bot = Bot(TOKEN)
     # включить по дефолту защиту от копирования
     bot.default.protect_content = True
-    bot.default.parse_mode = "Markdown"
+    bot.default.parse_mode = "HTML"
     # добавить роутеры
     dp.include_router(admin_router)
     dp.include_router(router)
