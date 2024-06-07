@@ -21,6 +21,7 @@ from aiogram.exceptions import TelegramUnauthorizedError
 from aiogram.filters import Command, CommandObject
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import Message
+from aiogram.enums import ParseMode
 from aiogram.utils.token import TokenValidationError, validate_token
 import asyncio
 import logging
@@ -73,14 +74,15 @@ async def command_start_handler(message: Message) -> None:
     user_id = message.from_user.id
     username = message.from_user.username
     if get_user(user_id):
-        text = 'Рады снова вас видеть!'
+        text = 'Рады снова вас видеть'
+        textbtn = "gh"
     else:
         add_user(user_id, username)
         text = 'Это телеграм бот для обучения по курсу "SMM-Старт: Основы эффективного продвижения в социальных сетях"'
-
-    await message.answer(f"Здравствуй, <b>{message.from_user.full_name}!</b>\n"
+        textbtn ="hg"
+    await message.answer(f"Здравствуй, {message.from_user.full_name}\n"
                          f'{text}',
-                        reply_markup=keybrd_na4alo(message.message_id)
+                        reply_markup=keybrd_na4alo(textbtn, message.message_id)
                         #finite_state_machine.cmd_menu(finite_state_machine.cmd_keybd('menu_dop', big=True) ),
                         #reply_markup=keybrd_sub4ik(spisok, 'контрагентов', 1, 1, message.message_id))
                          #f"id = {user_id}\n"
@@ -133,7 +135,7 @@ async def main() -> None:
     bot = Bot(TOKEN)
     # включить по дефолту защиту от копирования
     bot.default.protect_content = True
-    bot.default.parse_mode = "HTML"
+    bot.default.parse_mode = ParseMode.MARKDOWN_V2
     # добавить роутеры
     dp.include_router(admin_router)
     dp.include_router(router)

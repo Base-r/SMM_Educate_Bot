@@ -79,13 +79,19 @@ class Lesson(CallbackData, prefix="lesson"):
     status: str
     msgid: int
 
+class Lesstage(CallbackData, prefix="stage"):
+    id_lesson: int
+    id_stage: int
+    status: str
+    msgid: int
 
-def keybrd_na4alo(msgid):
+
+def keybrd_na4alo(textbtn, msgid):
     markup = InlineKeyboardBuilder()
     msgid = str(msgid)
 
     # lesson.subtitle = new_subtitle
-    markup.row(InlineKeyboardButton(text="Готовы продолжить?",
+    markup.row(InlineKeyboardButton(text=textbtn,
                                     callback_data=
                                     Na4alo(
                                         status="начало",
@@ -112,6 +118,27 @@ def keybrd_tarif(msgid, status):
                    )
     return markup.as_markup()
 
+
+def keybrd_stage(indexlesson, msgid, status):
+    markup = InlineKeyboardBuilder()
+    msgid = str(msgid)
+    stages = get_all_stage_from_lesson(indexlesson=indexlesson)
+    if stages is None:
+        return False
+    #items = Этап()
+    print(stages)
+    for item in stages:
+        markup.row(InlineKeyboardButton(text=f'этап {item.index}: {item.lesson_text}',
+                                        callback_data=
+                                        Lesstage(
+                                            id_lesson=str(indexlesson),
+                                            id_stage=str(item.index),
+                                            status=status,
+                                            msgid=str(msgid)
+                                        ).pack()
+                                        ), width=1
+                   )
+    return markup.as_markup()
 
 def keybrd_lesson(msgid, status):
     markup = InlineKeyboardBuilder()
@@ -149,8 +176,6 @@ def cmd_keybd(menu_txt, big=False):
     keyboard.append(kb_row)
 
     return keyboard
-
-
 def cmd_spisok(menu_txt, b=1):
     keyboard = []
     kb_row = []
@@ -161,8 +186,6 @@ def cmd_spisok(menu_txt, b=1):
         if i & b:
             keyboard.append(kb_row)
     return keyboard
-
-
 def cmd_menu(keyboard):
     return ReplyKeyboardMarkup(
         resize_keyboard=True,
@@ -175,8 +198,7 @@ async def vibor1(call: CallbackQuery, callback_data: Na4alo, state: FSMContext):
     # await call.answer()
 
     await call.message.edit_text(
-        text=f'Наш курс дает возможность выбрать тариф, который подойдет именно вам. Мы подготовили для вас [тест](https://madte.st/0xGxs0Cr). Пройдите его, чтобы понять какой тариф, соответствует вашим текущим потребностям и целям в области SMM.',
-        parse_mode='MarkdownV2', reply_markup=keybrd_tarif(call.message.message_id, "gettar")
+        text=f'Наш курс дает возможность выбрать тариф, который подойдет именно вам Мы подготовили для вас [тест](https://madte.st/0xGxs0Cr) Пройдите его, чтобы понять какой тариф, соответствует вашим текущим потребностям и целям в области SMM', reply_markup=keybrd_tarif(call.message.message_id, "gettar")
         # chat_id=call.from_user.id,
         # message_id=call.message.message_id
     )
@@ -243,12 +265,16 @@ async def vibor3(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
     # if check:
     #    add_available_lesson(call.from_user.id, int(callback_data.id_))
 
+async def otpravka(message: Message) -> None:
+    text = 'мы рады что вы вернулись\\.'
+    textbtn = "gh"
+    await message.answer(f"Приветствую, *{message.from_user.full_name}*\n"
+                         f"{text} Вы готовы приступить к работе?",
+                         reply_markup=keybrd_na4alo(textbtn, message.message_id)
+                         )
+
 
 @form_router.message(F.content_type.in_({'text'}))
 async def process_anytxt(message: Message, state: FSMContext) -> None:
     if not get_admin(message.chat.id):
-        text = 'мы рады что вы вернулись.'
-        await message.answer(f"Приветствую, <b>{message.from_user.full_name}!</b>\n"
-                             f"{text} Вы готовы приступить к работе?",
-                             reply_markup=keybrd_na4alo(message.message_id)
-                             )
+        await otpravka(message)

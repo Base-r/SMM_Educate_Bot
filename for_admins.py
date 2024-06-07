@@ -13,6 +13,7 @@ formattime = '%d.%m.%Y %H:%M'
 class Addlesson(StatesGroup):
     # состояние добавления
     urok = State()
+    subt = State()
     rename = State()
     v1urok = State()
     v2index = State()
@@ -54,7 +55,7 @@ async def add_less(message: Message, state: FSMContext) -> None:
 @admin_router.callback_query(Lesson.filter(F.status == "rename"))
 async def less_rename(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
     print('rename', callback_data.status)
-    await call.message.edit_text(text=f'Урок {callback_data.id_} вводите описание')
+    await call.message.edit_text(text=f'index урока {callback_data.id_} вводите описание')
     await state.set_state(Addlesson.rename)
     await state.update_data(id=callback_data.id_)
     await state.update_data(msgid=call.message.message_id)
@@ -92,7 +93,7 @@ async def tariff_rename(call: CallbackQuery, callback_data: Tariff, state: FSMCo
 @admin_router.message(AddTariff.rename)
 async def tariff_new_price(message: Message, state: FSMContext) -> None:
     print('price')
-    await message.answer(text=f'Название тарифа переименовано. Введите новую цену: ')
+    await message.answer(text=f'Название тарифа переименовано\\. Введите новую цену: ')
     await state.set_state(AddTariff.price)
     await state.update_data(text=message.text)
     
@@ -105,7 +106,29 @@ async def update_tariff(message: Message, state: FSMContext) -> None:
     await message.answer("Название и цена тарифа успешно обновлены!")
     await state.clear()
 
+# добавить урок командой в боте /addU
+# или текстом содержащим смайлик
+@admin_router.message(Command(commands=["addU"]))
+@admin_router.message(F.text.contains(":)"))
+async def add_urok(message: Message, state: FSMContext) -> None:
+    if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
+        await message.answer(
+            "Напишите название урока:")
+        await state.set_state(Addlesson.urok)
+            #reply_markup=keybrd_lesson(message.message_id, 'addU'))
+@admin_router.message(Addlesson.urok)
+async def add_urok1(message: types.Message, state: FSMContext) -> None:
+    await state.update_data(title=message.text)
+    await state.set_state(Addlesson.subt)
+    await message.answer(text=f'описание урока')
+@admin_router.message(Addlesson.subt)
+async def add_urok2(message: types.Message, state: FSMContext) -> None:
+    data = await state.get_data()
+    await state.clear()
+    lesson1_id = add_lesson(data['title'], message.text)
+    await message.answer(text=f'добавил')
 
+# добавление этапа
 @admin_router.message(Command(commands=["adde"]))
 @admin_router.message(F.text.contains("😁"))
 async def add_etap(message: Message, state: FSMContext) -> None:
@@ -114,8 +137,6 @@ async def add_etap(message: Message, state: FSMContext) -> None:
             "выберите один из уроков, куда добавляется этап урока:",
             reply_markup=keybrd_lesson(message.message_id, 'addE'))
 
-
-#        await state.update_data(podr="")
 #        await state.set_state(Addlesson.v1urok)
 @admin_router.callback_query(Lesson.filter(F.status == "addE"))
 async def adde_1(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
@@ -149,7 +170,7 @@ async def photo_handler(message: types.Message, state: FSMContext) -> None:
 
 
 @admin_router.message(Addlesson.v4text)
-async def photo_handler(message: types.Message, state: FSMContext) -> None:
+async def photo_handler4(message: types.Message, state: FSMContext) -> None:
     data = await state.get_data()
     add_stage(урок_id=data['id'],
               index=data['index'],
@@ -159,6 +180,45 @@ async def photo_handler(message: types.Message, state: FSMContext) -> None:
               )
     await state.clear()
     await message.answer(text=f'готово, добавить еще жми 😁')
+
+
+
+@admin_router.message(Command(commands=["deletestage"]))
+@admin_router.message(F.text.contains(":p"))
+async def delete_stage(message: Message, state: FSMContext) -> None:
+    if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
+        await message.answer(
+            "выберите урок, в котором хотите удалить этап:",
+            reply_markup=keybrd_lesson(message.message_id, 'deletestage'))
+@admin_router.callback_query(Lesson.filter(F.status == "deletestage"))
+async def delete_stage1(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
+    print(callback_data.status)
+    keybrd = keybrd_stage(int(callback_data.id_), call.message.message_id, 'deletestage1')
+    if keybrd:
+        await call.message.edit_text(
+            "выберите этап, который хотите удалить:",
+            reply_markup=keybrd)
+    else:
+        await call.message.edit_text(
+            "нету этапов")
+@admin_router.callback_query(Lesstage.filter(F.status == "deletestage1"))
+async def delete_stage2(call: CallbackQuery, callback_data: Lesstage, state: FSMContext):
+    print(callback_data.status)
+    delete_lstage(int(callback_data.id_lesson), int(callback_data.id_stage))
+    await call.message.edit_text(text=f'этап {callback_data.id_stage} удален')
+
+@admin_router.message(Command(commands=["editlesson"]))
+@admin_router.message(F.text.contains(";)"))
+async def edit_less(message: Message) -> None:
+    if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
+        await message.answer(
+            "выберите номер урока, который хотите редактировать:",
+            reply_markup=keybrd_lesson(message.message_id, 'editlesson'))
+
+@admin_router.callback_query(Lesson.filter(F.status == "editlesson"))
+async def edit_less1(call: CallbackQuery, callback_data: Lesson, state: FSMContext):
+    print(callback_data.status)
+    await call.message.edit_text(text=f'Урок {callback_data.id_} удален')
 
 
 @admin_router.message(Command(commands=["deletelesson"]))
@@ -176,7 +236,11 @@ async def delete_less1(call: CallbackQuery, callback_data: Lesson, state: FSMCon
     delete_lesson(int(callback_data.id_))
     await call.message.edit_text(text=f'Урок {callback_data.id_} удален')
 
-
+@admin_router.message(Command(commands=["getlesson"]))
+@admin_router.message(F.text.contains(":/"))
+async def get_less(message: Message, state: FSMContext) -> None:
+    if get_admin(message.from_user.id) or message.from_user.id in adminchat_id:
+        await otpravka(message)
 @admin_router.my_chat_member(
     ChatMemberUpdatedFilter(member_status_changed=KICKED)
 )
